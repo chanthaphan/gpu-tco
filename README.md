@@ -44,6 +44,8 @@ Claude Code will read `CLAUDE.md` automatically for full project context.
 - **Sensitivity** — effective $/million-tokens across utilization levels (the key decision
   variable), with published API prices (DeepSeek, GLM, GPT-class) as reference lines.
 - **Sensitivity tornado** — which assumption moves on-prem TCO the most at ±20%.
+- **EN/$ ↔ ไทย/฿ toggle** — switches the UI language and converts all money displays to
+  THB at 33.4/USD. Inputs and the model stay USD-native; the conversion is display-only.
 
 Everything recomputes live as you drag the sliders.
 

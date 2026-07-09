@@ -39,6 +39,7 @@ src/
     __tests__/extensions.test.js ← Tests for LLM scaling, workload builder, new plots.
   components/
     UI.jsx                 ← Presentational components (Slider, Section, Stat, Card, PlatformSelector).
+  i18n.js                  ← EN/$ ↔ ไทย/฿ locale strings + money formatters (display-layer only).
   App.jsx                  ← Wires model → recharts visualizations. State lives here.
   main.jsx                 ← React entry point.
 index.html                 ← Vite HTML entry.
@@ -145,7 +146,8 @@ API list prices drift — re-verify `apiPrices.js` and bump each entry's `asOf` 
 - ✅ **TCO-vs-throughput, tornado, API benchmark, memory-fit plots** — DONE.
 - Add **"export scenario to CSV/JSON"** button (serialize current `s` + `computeModel`).
 - Add **save/compare two scenarios** side-by-side.
-- Add a **currency toggle** on all chart axes (USD + one user-configured local currency).
+- ✅ **EN/$ ↔ ไทย/฿ locale toggle** — DONE (`src/i18n.js`; display-layer only, model stays
+  USD-native, THB converts at `FX_THB` 33.4).
 - Wire in **real Azure ND H200 v5 reserved pricing** when published.
 
 ## Commands

@@ -85,49 +85,46 @@ export function SelectorGrid({ title, options, value, onChange, footer }) {
   );
 }
 
-export function PlatformSelector({ platforms, order, value, onChange }) {
+export function PlatformSelector({ platforms, order, value, onChange, L, money }) {
   const p = platforms[value];
-  const unit = p.rackBased ? 'rack' : 'node';
+  const unit = p.rackBased ? L.unitRack : L.unitNode;
   return (
-    <SelectorGrid title="Accelerator Platform" options={order.map((id) => platforms[id])}
+    <SelectorGrid title={L.selPlatform} options={order.map((id) => platforms[id])}
       value={value} onChange={onChange}
       footer={
         <>
-          {p.tokPerGpu.toLocaleString()} tok/s/GPU · {p.gpusPerNode} GPU/{unit} · ${(p.nodeCost / 1e6).toFixed(2)}M/{unit}
-          {p.caution && <div style={{ color: COLORS.red, fontWeight: 700, marginTop: 3 }}>⚠ {p.caution}</div>}
+          {p.tokPerGpu.toLocaleString()} tok/s/GPU · {p.gpusPerNode} GPU/{unit} · {money.m(p.nodeCost)}/{unit}
+          {p.caution && <div style={{ color: COLORS.red, fontWeight: 700, marginTop: 3 }}>⚠ {L.ascendCaution}</div>}
         </>
       } />
   );
 }
 
-export function ModelSelector({ models, order, value, onChange }) {
+export function ModelSelector({ models, order, value, onChange, L }) {
   const m = models[value];
   return (
-    <SelectorGrid title="LLM Model" options={order.map((id) => models[id])}
+    <SelectorGrid title={L.selModel} options={order.map((id) => models[id])}
       value={value} onChange={onChange}
-      footer={m.custom
-        ? 'Set tok/s/GPU and weights under LLM Serving below'
-        : `${m.totalB}B total · ${m.activeB}B active · ${m.precision} · ${m.weightsGb} GB weights`} />
+      footer={m.custom ? L.customNote : L.modelSpec(m)} />
   );
 }
 
-const FIT_STYLES = {
-  'fits': { color: COLORS.teal, text: 'Fits' },
-  'tight': { color: COLORS.gold, text: 'Tight' },
-  'no-fit': { color: COLORS.red, text: 'Does not fit' },
-};
+const FIT_COLORS = { 'fits': COLORS.teal, 'tight': COLORS.gold, 'no-fit': COLORS.red };
+export const fitText = (L, status) =>
+  ({ 'fits': L.fitFits, 'tight': L.fitTight, 'no-fit': L.fitNoFit }[status]);
 
-export function MemoryFitBar({ fit }) {
-  const { color, text } = FIT_STYLES[fit.status];
+export function MemoryFitBar({ fit, L }) {
+  const color = FIT_COLORS[fit.status];
   const weightsPct = Math.min(100, (fit.weightsGb / fit.nodeHbmGb) * 100);
   const usablePct = (fit.usableGb / fit.nodeHbmGb) * 100;
+  const unit = fit.unitLabel === 'rack' ? L.unitRack : L.unitNode;
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
         <span style={{ fontSize: 12, color: '#334' }}>
-          Weights {fit.weightsGb.toLocaleString()} GB of {fit.nodeHbmGb.toLocaleString()} GB HBM per {fit.unitLabel}
+          {L.memLine(fit.weightsGb.toLocaleString(), fit.nodeHbmGb.toLocaleString(), unit)}
         </span>
-        <span style={{ fontSize: 11.5, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: 0.4 }}>{text}</span>
+        <span style={{ fontSize: 11.5, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: 0.4 }}>{fitText(L, fit.status)}</span>
       </div>
       <div style={{ position: 'relative', height: 14, background: '#e8eaed', borderRadius: 7, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, width: `${weightsPct}%`, background: color, borderRadius: 7 }} />
@@ -135,7 +132,7 @@ export function MemoryFitBar({ fit }) {
           title="KV/batch headroom boundary" />
       </div>
       <div style={{ fontSize: 10.5, color: COLORS.grey, marginTop: 4 }}>
-        Marker = usable limit after KV/batch headroom ({fit.usableGb.toFixed(0)} GB).
+        {L.memMarker(fit.usableGb.toFixed(0))}
       </div>
     </div>
   );
@@ -154,35 +151,37 @@ export function SpecGrid({ items }) {
   );
 }
 
-export function PlatformMatrix({ rows, currentId, fmtUsd }) {
+export function PlatformMatrix({ rows, currentId, money, L }) {
   const th = { fontSize: 9.5, color: COLORS.grey, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, textAlign: 'right', padding: '4px 8px' };
   const td = { fontSize: 12, color: '#334', textAlign: 'right', padding: '5px 8px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' };
+  const en = L.locale === 'en';
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '1.5px solid #e0e3e7' }}>
-            <th style={{ ...th, textAlign: 'left' }}>Platform</th>
-            <th style={th}>Eff. tok/s/GPU</th>
-            <th style={th}>Fleet</th>
-            <th style={th}>On-Prem 5-yr</th>
-            <th style={th}>Memory</th>
+            <th style={{ ...th, textAlign: 'left' }}>{L.mxPlatform}</th>
+            <th style={th}>{L.mxTok}</th>
+            <th style={th}>{L.mxFleet}</th>
+            <th style={th}>{L.mxTco}</th>
+            <th style={th}>{L.mxMemory}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => {
             const active = r.id === currentId;
-            const fit = FIT_STYLES[r.fit];
-            const unit = r.rackBased ? 'rack' : 'node';
+            const unit = r.rackBased
+              ? (en && r.nodes > 1 ? L.unitRacks : L.unitRack)
+              : (en && r.nodes > 1 ? L.unitNodes : L.unitNode);
             return (
               <tr key={r.id} style={{ borderBottom: '1px solid #eef0f2', background: active ? '#0B25450D' : 'transparent' }}>
                 <td style={{ ...td, textAlign: 'left', fontWeight: active ? 800 : 600, color: active ? COLORS.navy : '#334' }}>
                   {r.label.replace('NVIDIA ', '')}{active ? ' ◂' : ''}
                 </td>
                 <td style={td}>{Math.round(r.effTokPerGpu).toLocaleString()}</td>
-                <td style={td}>{r.nodes} {unit}{r.nodes > 1 ? 's' : ''} · {r.gpus} GPU</td>
-                <td style={td}>{fmtUsd(r.onprem)}</td>
-                <td style={{ ...td, color: fit.color, fontWeight: 700 }}>{fit.text}</td>
+                <td style={td}>{r.nodes} {unit} · {r.gpus} GPU</td>
+                <td style={td}>{money.m(r.onprem)}</td>
+                <td style={{ ...td, color: FIT_COLORS[r.fit], fontWeight: 700 }}>{fitText(L, r.fit)}</td>
               </tr>
             );
           })}

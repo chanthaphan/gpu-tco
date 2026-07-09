@@ -68,7 +68,22 @@ export const PLATFORMS = {
     // this caution wherever the platform is selectable; do not remove it.
     caution: 'US BIS GP10 (13 May 2025): worldwide-use export-control violation — legal sign-off required',
   },
+  ascend950: {
+    id: 'ascend950',
+    label: 'Huawei Ascend 950PR',
+    tokPerGpu: 1500,     // planning estimate — launched Mar 2026, 1 PFLOPS FP8, but the PR
+                         // variant is prefill-optimized with HiBL HBM at ~1.6 TB/s, so
+                         // decode gains over the 910C are modest despite the compute jump
+    gpusPerNode: 8,      // Atlas 350-based 8-NPU server assumption
+    nodeCost: 240000,    // planning estimate; no list price (launch coverage, no public pricing)
+    nodeKw: 9.0,         // ~0.9 kW/NPU + overhead, planning estimate
+    hbmGb: 128,          // HiBL 1.0 spec 128 GB (Atlas 350 card reported at 112 GB)
+    azurePaygHr: 75.0,   // no Azure SKU — equivalent Azure H200 capacity for one node
+    rackBased: false,
+    // Same US export-control exposure class as the 910 series (PRC 3A090 advanced chips).
+    caution: 'US BIS GP10 (13 May 2025): worldwide-use export-control violation — legal sign-off required',
+  },
 };
 
-export const PLATFORM_ORDER = ['h100', 'h200', 'b200', 'gb200', 'ascend'];
+export const PLATFORM_ORDER = ['h100', 'h200', 'b200', 'gb200', 'ascend', 'ascend950'];
 export const DEFAULT_PLATFORM = 'h200';

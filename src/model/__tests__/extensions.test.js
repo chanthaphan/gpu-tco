@@ -117,6 +117,13 @@ describe('memory fit', () => {
     expect(m.gpus).toBe(232);
   });
 
+  it('Ascend 950PR sizes 25 nodes and carries the same legal caution', () => {
+    const m = computeModel({ ...DEFAULTS, platform: 'ascend950' });
+    expect(m.nodes).toBe(25);
+    expect(m.gpus).toBe(200);
+    expect(PLATFORMS.ascend950.caution).toBe(PLATFORMS.ascend.caution);
+  });
+
   it('DeepSeek does not fit a single H100 node (671 GB > 640 GB)', () => {
     const fit = memoryFit({ ...DEFAULTS, llm: 'deepseek', platform: 'h100' });
     expect(fit.status).toBe('no-fit');

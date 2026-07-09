@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeModel, effectiveTpm, llmSpeedFactor, resolveLlm, memoryFit,
-  tcoVsThroughput, sensitivityTornado, DEFAULTS,
+  tcoVsThroughput, sensitivityTornado, platformMatrix, DEFAULTS,
 } from '../tco.js';
-import { PLATFORMS } from '../platforms.js';
+import { PLATFORMS, PLATFORM_ORDER } from '../platforms.js';
 import { MODELS, SPEED_CLAMP } from '../models.js';
 import { API_PRICES, blendedApiPrice, apiBenchmarks, INPUT_SHARE } from '../apiPrices.js';
 
@@ -174,6 +174,35 @@ describe('sensitivity tornado', () => {
     const tpmRow = td.rows.find((r) => r.key === 'tpm');
     expect(tpmRow.span).toBeGreaterThanOrEqual(0);
     expect(td.base).toBe(computeModel({ ...DEFAULTS, demandMode: 'derived' }).onprem);
+  });
+});
+
+describe('platform matrix', () => {
+  it('one row per platform, each matching computeModel for that platform', () => {
+    const rows = platformMatrix(DEFAULTS);
+    expect(rows.map((r) => r.id)).toEqual(PLATFORM_ORDER);
+    for (const row of rows) {
+      const m = computeModel({ ...DEFAULTS, platform: row.id });
+      expect(row.nodes).toBe(m.nodes);
+      expect(row.gpus).toBe(m.gpus);
+      expect(row.onprem).toBe(m.onprem);
+      expect(row.effTokPerGpu).toBe(m.effTokPerGpu);
+      expect(row.fit).toBe(m.fit.status);
+    }
+  });
+
+  it('reflects the selected LLM (GLM-5.2 no-fits H100 in the matrix)', () => {
+    const rows = platformMatrix({ ...DEFAULTS, llm: 'glm52' });
+    expect(rows.find((r) => r.id === 'h100').fit).toBe('no-fit');
+    expect(rows.find((r) => r.id === 'h200').fit).toBe('fits');
+  });
+
+  it('every catalog model declares context and license for the spec panel', () => {
+    for (const model of Object.values(MODELS)) {
+      if (model.custom) continue;
+      expect(model.contextK).toBeGreaterThan(0);
+      expect(model.license).toBeTruthy();
+    }
   });
 });
 

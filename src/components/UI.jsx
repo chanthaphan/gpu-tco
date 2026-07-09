@@ -136,6 +136,57 @@ export function MemoryFitBar({ fit }) {
   );
 }
 
+export function SpecGrid({ items }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))', gap: 8, marginBottom: 12 }}>
+      {items.map(([label, value]) => (
+        <div key={label} style={{ background: '#f4f6f8', borderRadius: 8, padding: '7px 10px' }}>
+          <div style={{ fontSize: 9.5, color: COLORS.grey, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.navy, marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function PlatformMatrix({ rows, currentId, fmtUsd }) {
+  const th = { fontSize: 9.5, color: COLORS.grey, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, textAlign: 'right', padding: '4px 8px' };
+  const td = { fontSize: 12, color: '#334', textAlign: 'right', padding: '5px 8px', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' };
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ borderBottom: '1.5px solid #e0e3e7' }}>
+            <th style={{ ...th, textAlign: 'left' }}>Platform</th>
+            <th style={th}>Eff. tok/s/GPU</th>
+            <th style={th}>Fleet</th>
+            <th style={th}>On-Prem 5-yr</th>
+            <th style={th}>Memory</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const active = r.id === currentId;
+            const fit = FIT_STYLES[r.fit];
+            const unit = r.rackBased ? 'rack' : 'node';
+            return (
+              <tr key={r.id} style={{ borderBottom: '1px solid #eef0f2', background: active ? '#0B25450D' : 'transparent' }}>
+                <td style={{ ...td, textAlign: 'left', fontWeight: active ? 800 : 600, color: active ? COLORS.navy : '#334' }}>
+                  {r.label.replace('NVIDIA ', '')}{active ? ' ◂' : ''}
+                </td>
+                <td style={td}>{Math.round(r.effTokPerGpu).toLocaleString()}</td>
+                <td style={td}>{r.nodes} {unit}{r.nodes > 1 ? 's' : ''} · {r.gpus} GPU</td>
+                <td style={td}>{fmtUsd(r.onprem)}</td>
+                <td style={{ ...td, color: fit.color, fontWeight: 700 }}>{fit.text}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function Card({ title, children, style }) {
   return (
     <div style={{ background: '#fff', border: '1px solid #e8eaed', borderRadius: 12, padding: 16, marginBottom: 16, ...style }}>

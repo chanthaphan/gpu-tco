@@ -26,9 +26,12 @@ Claude Code will read `CLAUDE.md` automatically for full project context.
 ## What it shows
 
 - **Fleet sizing** — GPUs/nodes needed for your throughput at a given utilization target.
-- **LLM model selector** — pick the model you're serving (GLM-4.5, DeepSeek-V3/R1,
-  Qwen3-235B, Llama 4 Maverick, GPT-OSS-120B, or Custom); throughput per GPU scales
-  automatically from active-weight bytes (decode is bandwidth-bound).
+- **LLM model selector** — pick the model you're serving (GLM-4.5, GLM-5.2,
+  DeepSeek-V3/R1, Qwen3-235B, Llama 4 Maverick, GPT-OSS-120B, or Custom); throughput
+  per GPU scales automatically from active-weight bytes (decode is bandwidth-bound).
+- **Model spec & platform matrix** — the selected model's full specification (params,
+  precision, weights, context, license) plus per-platform performance: effective
+  tok/s/GPU, fleet size, on-prem 5-yr TCO, and memory fit on every accelerator.
 - **Workload builder** — enter TPM directly, or derive it from DAU × requests/day ×
   tokens/request × peak factor.
 - **GPU memory fit check** — flags models that don't fit one node's HBM (or leave no

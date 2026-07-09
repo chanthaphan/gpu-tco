@@ -5,14 +5,14 @@ import {
 } from 'recharts';
 import {
   DEFAULTS, CONTROLS, computeModel, cumulativeCurve, sensitivityByUtilization,
-  tcoVsThroughput, sensitivityTornado, fmtUsdM, fmtBreakEven,
+  tcoVsThroughput, sensitivityTornado, platformMatrix, fmtUsdM, fmtBreakEven,
 } from './model/tco.js';
 import { PLATFORMS, PLATFORM_ORDER } from './model/platforms.js';
 import { MODELS, MODEL_ORDER } from './model/models.js';
 import { apiBenchmarks } from './model/apiPrices.js';
 import {
   Slider, Section, Stat, Card, PlatformSelector, ModelSelector, SelectorGrid,
-  MemoryFitBar, useMediaQuery, COLORS,
+  MemoryFitBar, SpecGrid, PlatformMatrix, useMediaQuery, COLORS,
 } from './components/UI.jsx';
 
 const { navy, gold, teal, red, grey, blue } = COLORS;
@@ -38,6 +38,23 @@ export default function App() {
   const sens = useMemo(() => sensitivityByUtilization(m), [m]);
   const sweep = useMemo(() => tcoVsThroughput(s), [s]);
   const tornado = useMemo(() => sensitivityTornado(s), [s]);
+  const matrix = useMemo(() => platformMatrix(s), [s]);
+
+  const specItems = m.llm.custom
+    ? [
+      ['tok/s/GPU (H200 ref)', s.customTokPerGpu.toLocaleString()],
+      ['Weights', `${s.customWeightsGb} GB`],
+      ['Throughput factor', `×${m.speedFactor.toFixed(2)}`],
+    ]
+    : [
+      ['Total params', `${m.llm.totalB}B`],
+      ['Active params', `${m.llm.activeB}B`],
+      ['Precision', m.llm.precision],
+      ['Weights', `${m.llm.weightsGb} GB`],
+      ['Context', m.llm.contextK >= 1000 ? `${m.llm.contextK / 1000}M` : `${m.llm.contextK}K`],
+      ['License', m.llm.license],
+      ['Throughput factor', `×${m.speedFactor.toFixed(2)}`],
+    ];
 
   const tornadoData = tornado.rows.map((r) => ({
     label: r.label,
@@ -109,7 +126,13 @@ export default function App() {
 
           {/* Charts */}
           <div>
-            <Card title={`GPU Memory Fit — ${m.llm.label} on ${m.platform.label}`}>
+            <Card title={`Model — ${m.llm.label}`}>
+              <SpecGrid items={specItems} />
+              <PlatformMatrix rows={matrix} currentId={s.platform} fmtUsd={fmtUsdM} />
+              <div style={{ fontSize: 10.5, color: grey, margin: '2px 0 12px' }}>
+                Fleet and cost per platform for the current workload; ◂ marks the selected platform.
+                Throughput factor is the bandwidth-rule multiplier vs the GLM-4.5 calibration.
+              </div>
               <MemoryFitBar fit={m.fit} />
               {m.fit.status === 'no-fit' && (
                 <div style={{ fontSize: 11.5, color: red, fontWeight: 600, marginTop: 8 }}>

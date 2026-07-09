@@ -22,26 +22,32 @@ export const MODELS = {
   glm45: {
     id: 'glm45', label: 'GLM-4.5',
     totalB: 355, activeB: 32, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 355,
+    contextK: 128, license: 'MIT',
   },
   glm52: {
     id: 'glm52', label: 'GLM-5.2',
     totalB: 753, activeB: 40, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 753, // zai-org/GLM-5.2-FP8, Jul 2026
+    contextK: 1000, license: 'MIT',
   },
   deepseek: {
     id: 'deepseek', label: 'DeepSeek-V3/R1',
     totalB: 671, activeB: 37, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 671,
+    contextK: 128, license: 'MIT',
   },
   qwen3: {
     id: 'qwen3', label: 'Qwen3-235B-A22B',
     totalB: 235, activeB: 22, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 235,
+    contextK: 128, license: 'Apache-2.0',
   },
   llama4mav: {
     id: 'llama4mav', label: 'Llama 4 Maverick',
     totalB: 400, activeB: 17, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 400,
+    contextK: 1000, license: 'Llama 4 Community',
   },
   gptoss: {
     id: 'gptoss', label: 'GPT-OSS-120B',
     totalB: 117, activeB: 5.1, bytesPerParam: 0.55, precision: 'MXFP4', weightsGb: 65, // raw factor ~11× — hits SPEED_CLAMP max
+    contextK: 128, license: 'Apache-2.0',
   },
   // Custom: throughput and weights come from the customTokPerGpu / customWeightsGb inputs.
   custom: { id: 'custom', label: 'Custom', custom: true },

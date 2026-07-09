@@ -2,7 +2,7 @@
 // Single source of truth for all cost math. No React, no side effects — fully testable.
 // Defaults and unit rates are sourced in DEFAULTS below (see README / CLAUDE.md).
 
-import { PLATFORMS, DEFAULT_PLATFORM } from './platforms.js';
+import { PLATFORMS, PLATFORM_ORDER, DEFAULT_PLATFORM } from './platforms.js';
 import { MODELS, DEFAULT_MODEL, REF, SPEED_CLAMP } from './models.js';
 
 export const CONSTANTS = {
@@ -190,6 +190,21 @@ export function computeModel(s) {
     payg, ri1, ri3,
     bePayg: breakEven(payg), beRi1: breakEven(ri1), beRi3: breakEven(ri3),
   };
+}
+
+/**
+ * Per-platform performance matrix for the selected LLM at the current workload:
+ * effective tok/s/GPU, fleet size, on-prem 5-yr TCO, and memory-fit status.
+ */
+export function platformMatrix(s) {
+  return PLATFORM_ORDER.map((id) => {
+    const m = computeModel({ ...s, platform: id });
+    return {
+      id, label: m.platform.label, rackBased: m.platform.rackBased,
+      effTokPerGpu: m.effTokPerGpu, nodes: m.nodes, gpus: m.gpus,
+      onprem: m.onprem, fit: m.fit.status,
+    };
+  });
 }
 
 /** 5-yr TCO ($M) for each option as demand sweeps a TPM range (node-count step curve). */

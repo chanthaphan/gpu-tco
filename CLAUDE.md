@@ -83,6 +83,8 @@ change it in `tco.js` and update the tests. Never duplicate math into a componen
 - `sensitivityByUtilization(model)` — effective $/M-tokens at each utilization level.
 - `tcoVsThroughput(s, {min,max,step})` — TCO sweep across TPM (node-count step curve).
 - `sensitivityTornado(s, pct)` — on-prem TCO impact of each driver at ±pct, ranked.
+- `platformMatrix(s)` — per-platform rows (eff. tok/s/GPU, fleet, on-prem TCO, fit)
+  for the selected LLM; drives the model spec/performance card.
 
 ### Core formulas (keep these correct)
 - `speedFactor = clamp(REF.activeB*REF.bytesPerParam / (activeB*bytesPerParam), 0.25, 4)`

@@ -8,22 +8,22 @@ import { MODELS, SPEED_CLAMP } from '../models.js';
 import { API_PRICES, blendedApiPrice, apiBenchmarks, INPUT_SHARE } from '../apiPrices.js';
 
 describe('LLM model selection', () => {
-  it('default GLM-4.5 has speedFactor exactly 1 — pinned results unchanged', () => {
-    expect(llmSpeedFactor(DEFAULTS)).toBe(1);
+  it('default is GLM-5.2 (reference model A): factor 0.8, 17 H200 nodes', () => {
+    expect(llmSpeedFactor(DEFAULTS)).toBeCloseTo(0.8, 10);
     const m = computeModel(DEFAULTS);
-    expect(m.nodes).toBe(14);
-    expect(m.gpus).toBe(112);
-    expect(m.llm.id).toBe('glm45');
+    expect(m.nodes).toBe(17);
+    expect(m.gpus).toBe(136);
+    expect(m.llm.id).toBe('glm52');
   });
 
-  it('DeepSeek (37B active) needs more nodes than GLM-4.5', () => {
+  it('GLM-4.5 is the calibration anchor: speedFactor exactly 1 → 14 nodes', () => {
+    expect(llmSpeedFactor({ ...DEFAULTS, llm: 'glm45' })).toBe(1);
+    expect(computeModel({ ...DEFAULTS, llm: 'glm45' }).nodes).toBe(14);
+  });
+
+  it('DeepSeek (reference model B, 37B active) → 16 H200 nodes', () => {
     const m = computeModel({ ...DEFAULTS, llm: 'deepseek' });
     expect(m.nodes).toBe(16);
-  });
-
-  it('GLM-5.2 (40B active) → factor 0.8 → 17 H200 nodes', () => {
-    expect(llmSpeedFactor({ ...DEFAULTS, llm: 'glm52' })).toBeCloseTo(0.8, 10);
-    expect(computeModel({ ...DEFAULTS, llm: 'glm52' }).nodes).toBe(17);
   });
 
   it('GLM-5.2 (753 GB) does not fit a single H100 node', () => {
@@ -55,10 +55,10 @@ describe('LLM model selection', () => {
       .toBeCloseTo(PLATFORMS.h100.tokPerGpu / PLATFORMS.h200.tokPerGpu, 10);
   });
 
-  it('unknown llm id falls back to GLM-4.5', () => {
+  it('unknown llm id falls back to the default model (GLM-5.2)', () => {
     const m = computeModel({ ...DEFAULTS, llm: 'nonexistent' });
-    expect(m.llm.id).toBe('glm45');
-    expect(m.nodes).toBe(14);
+    expect(m.llm.id).toBe('glm52');
+    expect(m.nodes).toBe(17);
   });
 
   it('every catalog model produces a positive fleet', () => {
@@ -99,11 +99,22 @@ describe('memory fit', () => {
     for (const p of Object.values(PLATFORMS)) expect(p.hbmGb).toBeGreaterThan(0);
   });
 
-  it('GLM-4.5 fits an H200 node with default headroom', () => {
+  it('default GLM-5.2 (753 GB) fits an H200 node with default headroom', () => {
     const fit = memoryFit(DEFAULTS);
     expect(fit.status).toBe('fits');
     expect(fit.nodeHbmGb).toBe(141 * 8);
     expect(fit.unitLabel).toBe('node');
+  });
+
+  it('Ascend 910C: GLM-5.2 is tight (753 GB vs 1,024 GB node), DeepSeek fits', () => {
+    expect(memoryFit({ ...DEFAULTS, platform: 'ascend' }).status).toBe('tight');
+    expect(memoryFit({ ...DEFAULTS, llm: 'deepseek', platform: 'ascend' }).status).toBe('fits');
+  });
+
+  it('Ascend 910C sizes 29 nodes for the GLM-5.2 baseline workload', () => {
+    const m = computeModel({ ...DEFAULTS, platform: 'ascend' });
+    expect(m.nodes).toBe(29);
+    expect(m.gpus).toBe(232);
   });
 
   it('DeepSeek does not fit a single H100 node (671 GB > 640 GB)', () => {
@@ -138,7 +149,7 @@ describe('TCO vs throughput sweep', () => {
   it('the tpm=10 row matches computeModel(DEFAULTS)', () => {
     const row = rows.find((r) => r.tpm === 10);
     expect(row.onprem).toBeCloseTo(computeModel(DEFAULTS).onprem / 1e6, 6);
-    expect(row.nodes).toBe(14);
+    expect(row.nodes).toBe(17);
   });
 
   it('forces direct mode so the sweep is valid in derived mode too', () => {

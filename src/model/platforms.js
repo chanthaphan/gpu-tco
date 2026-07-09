@@ -53,7 +53,22 @@ export const PLATFORMS = {
     azurePaygHr: 1150.0, // per-rack-equivalent planning estimate
     rackBased: true,
   },
+  ascend: {
+    id: 'ascend',
+    label: 'Huawei Ascend 910C',
+    tokPerGpu: 1300,     // sustained/derated from Huawei's 1,943 tok/s/NPU decode (CloudMatrix-Infer)
+    gpusPerNode: 8,      // 8-NPU Atlas-class server
+    nodeCost: 220000,    // gray-market planning estimate (~180-200K CNY/chip reported); no official list price
+    nodeKw: 8.5,         // ~800W/NPU + overhead; system-level efficiency well below Blackwell
+    hbmGb: 128,          // per 910C package
+    azurePaygHr: 65.0,   // no Azure Ascend SKU — equivalent Azure H200 capacity for one Ascend node
+    rackBased: false,
+    // Included per explicit instruction (Jul 2026). US BIS GP10 guidance (13 May 2025)
+    // makes worldwide use of Ascend 910-series an export-control violation — surface
+    // this caution wherever the platform is selectable; do not remove it.
+    caution: 'US BIS GP10 (13 May 2025): worldwide-use export-control violation — legal sign-off required',
+  },
 };
 
-export const PLATFORM_ORDER = ['h100', 'h200', 'b200', 'gb200'];
+export const PLATFORM_ORDER = ['h100', 'h200', 'b200', 'gb200', 'ascend'];
 export const DEFAULT_PLATFORM = 'h200';

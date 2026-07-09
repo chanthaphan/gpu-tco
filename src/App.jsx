@@ -120,7 +120,8 @@ export default function App() {
             <div style={{ fontSize: 10.5, color: grey, lineHeight: 1.5 }}>
               Defaults from the sourced 5-yr TCO analysis. Azure RI rates proxied from H100 discounts.
               Model throughput scaled from active-weight bytes (see models.js) — benchmark before committing.
-              Huawei Ascend excluded from cost math (13 May 2025 US BIS worldwide-use ruling).
+              Huawei Ascend included at gray-market planning rates; the 13 May 2025 US BIS GP10 ruling makes
+              worldwide use an export-control violation — requires explicit legal/compliance sign-off.
             </div>
           </Card>
 

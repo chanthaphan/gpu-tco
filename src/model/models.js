@@ -53,5 +53,8 @@ export const MODELS = {
   custom: { id: 'custom', label: 'Custom', custom: true },
 };
 
-export const MODEL_ORDER = ['glm45', 'glm52', 'deepseek', 'qwen3', 'llama4mav', 'gptoss', 'custom'];
-export const DEFAULT_MODEL = 'glm45';
+// GLM-5.2 is the default (reference model A; DeepSeek-V3/R1 is reference model B).
+// GLM-4.5 stays in the catalog as the throughput *calibration anchor* (REF above):
+// platform tokPerGpu figures are still defined at GLM-4.5 = speedFactor 1.0.
+export const MODEL_ORDER = ['glm52', 'deepseek', 'glm45', 'qwen3', 'llama4mav', 'gptoss', 'custom'];
+export const DEFAULT_MODEL = 'glm52';

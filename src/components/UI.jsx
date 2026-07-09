@@ -91,7 +91,12 @@ export function PlatformSelector({ platforms, order, value, onChange }) {
   return (
     <SelectorGrid title="Accelerator Platform" options={order.map((id) => platforms[id])}
       value={value} onChange={onChange}
-      footer={`${p.tokPerGpu.toLocaleString()} tok/s/GPU · ${p.gpusPerNode} GPU/${unit} · $${(p.nodeCost / 1e6).toFixed(2)}M/${unit}`} />
+      footer={
+        <>
+          {p.tokPerGpu.toLocaleString()} tok/s/GPU · {p.gpusPerNode} GPU/{unit} · ${(p.nodeCost / 1e6).toFixed(2)}M/{unit}
+          {p.caution && <div style={{ color: COLORS.red, fontWeight: 700, marginTop: 3 }}>⚠ {p.caution}</div>}
+        </>
+      } />
   );
 }
 

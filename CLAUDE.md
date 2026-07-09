@@ -7,21 +7,24 @@ Read it before making changes.
 
 An interactive **GPU Infrastructure Total Cost of Ownership (TCO) calculator** for teams
 weighing an on-prem GPU build against cloud. It compares the 5-year cost of serving a large
-open-source Mixture-of-Experts LLM (GLM-4.5 / DeepSeek-class) at **10 million tokens per
-minute (10M TPM)** across:
+open-source Mixture-of-Experts LLM at **10 million tokens per minute (10M TPM)** across:
 
-- **On-premise NVIDIA H200** (the default build)
+- **On-premise NVIDIA H200** (the default build), plus H100 / B200 / GB200 NVL72 /
+  Huawei Ascend 910C platforms
 - **Azure ND H200 v5** — pay-as-you-go, 1-year Reserved, 3-year Reserved
 
+The default (reference model A) is **GLM-5.2** (753B/40B MoE); **DeepSeek-V3/R1** is
+reference model B. GLM-4.5 remains the throughput *calibration anchor* (speedFactor 1.0).
 It computes fleet sizing, itemized 5-year TCO, break-even timelines, and a
 utilization-sensitivity curve, all updating live as the user drags sliders.
 
-**Huawei Ascend is deliberately excluded from the cost math** — not for performance
-reasons but legal ones: a 13 May 2025 US BIS ruling makes using Ascend 910-series chips
-anywhere in the world an export-control violation, an unacceptable sanctions risk for most
-enterprises (especially regulated or USD-clearing institutions). Do not add Ascend as a
-cost option without an explicit instruction that accounts for this; a *disabled/annotated*
-comparison entry is acceptable, a live cost recommendation is not.
+**Huawei Ascend is included in the cost math with a mandatory legal caution** (added on
+explicit user instruction, 10 Jul 2026, at gray-market planning rates). A 13 May 2025 US
+BIS GP10 ruling makes using Ascend 910-series chips anywhere in the world an
+export-control violation — a material sanctions risk for regulated or USD-clearing
+institutions. The `caution` field on the ascend platform entry is surfaced in the UI and
+report wherever Ascend appears; **do not remove or soften that warning**, and keep the
+legal framing prominent in any output that shows Ascend costs.
 
 ## Architecture
 
@@ -112,6 +115,7 @@ change it in `tco.js` and update the tests. Never duplicate math into a componen
 |---|---|---|
 | tokPerGpu (H200) | 2200 tok/s | vLLM wide-EP, CoreWeave H200 cluster (Dec 2025) |
 | nodeCost | $340,000 / 8×H200 | market estimate |
+| ascend nodeCost / tokPerGpu | $220,000 / 1300 tok/s | gray-market planning estimate (~180–200K CNY/chip reported); derated from Huawei CloudMatrix-Infer 1,943 tok/s decode |
 | elecRate | $0.13/kWh | blended industrial rate — users should set their local tariff |
 | coloRate | $200/kW/mo | high-density AI colo, metro-market estimate |
 | paygHr | $110.24/hr/node | Azure ND96isr H200 v5, Vantage 6-Jul-2026 |
@@ -130,7 +134,8 @@ API list prices drift — re-verify `apiPrices.js` and bump each entry's `asOf` 
 - Charts use **recharts**. Keep them responsive (`ResponsiveContainer`).
 - No browser storage APIs unless asked. Keep everything in React state.
 - Run `npm test` after any model change — the tests encode the expected defaults
-  (e.g. 14 nodes / 112 GPUs, ~$14.4M on-prem total; GLM-4.5 speedFactor exactly 1.0).
+  (GLM-5.2 default: 17 nodes / 136 GPUs, ~$16.5M on-prem total; GLM-4.5 anchor:
+  speedFactor exactly 1.0 → 14 nodes).
 
 ## Good first tasks / likely requests
 

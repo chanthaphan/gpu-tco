@@ -3,10 +3,10 @@ import { computeModel, cumulativeCurve, sensitivityByUtilization, DEFAULTS, CONS
 import { PLATFORMS } from '../platforms.js';
 
 describe('computeModel — sizing', () => {
-  it('sizes 14 H200 nodes for the default 10M TPM @ 70% util', () => {
+  it('sizes 17 H200 nodes for the default GLM-5.2 @ 10M TPM, 70% util', () => {
     const m = computeModel(DEFAULTS);
-    expect(m.nodes).toBe(14);
-    expect(m.gpus).toBe(112);
+    expect(m.nodes).toBe(17);
+    expect(m.gpus).toBe(136);
   });
 
   it('raw capacity = target / utilization', () => {
@@ -16,7 +16,7 @@ describe('computeModel — sizing', () => {
 
   it('scales node count up when throughput doubles', () => {
     const m = computeModel({ ...DEFAULTS, tpm: 20 });
-    expect(m.nodes).toBe(28);
+    expect(m.nodes).toBe(34);
   });
 
   it('needs more nodes at lower utilization target', () => {
@@ -29,9 +29,9 @@ describe('computeModel — sizing', () => {
 describe('computeModel — on-prem TCO', () => {
   const m = computeModel(DEFAULTS);
 
-  it('5-year on-prem total lands near $14.4M', () => {
-    expect(m.onprem / 1e6).toBeGreaterThan(13);
-    expect(m.onprem / 1e6).toBeLessThan(16);
+  it('5-year on-prem total lands near $16.5M (GLM-5.2 baseline)', () => {
+    expect(m.onprem / 1e6).toBeGreaterThan(15);
+    expect(m.onprem / 1e6).toBeLessThan(18);
   });
 
   it('CAPEX = servers + networking/storage', () => {

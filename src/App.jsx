@@ -12,7 +12,7 @@ import { MODELS, MODEL_ORDER } from './model/models.js';
 import { apiBenchmarks } from './model/apiPrices.js';
 import {
   Slider, Section, Stat, Card, PlatformSelector, ModelSelector, SelectorGrid,
-  MemoryFitBar, COLORS,
+  MemoryFitBar, useMediaQuery, COLORS,
 } from './components/UI.jsx';
 
 const { navy, gold, teal, red, grey, blue } = COLORS;
@@ -27,6 +27,11 @@ const API_LINES = apiBenchmarks();
 export default function App() {
   const [s, setS] = useState(DEFAULTS);
   const set = (key) => (val) => setS((prev) => ({ ...prev, [key]: val }));
+
+  // Single-column layout on tablets/phones; single-column chart pairs on phones.
+  const isMobile = useMediaQuery('(max-width: 900px)');
+  const isNarrow = useMediaQuery('(max-width: 640px)');
+  const chartPair = { display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '1fr 1fr', gap: 16 };
 
   const m = useMemo(() => computeModel(s), [s]);
   const curve = useMemo(() => cumulativeCurve(m), [m]);
@@ -60,15 +65,15 @@ export default function App() {
   const tpmShown = Number(m.tpmEff.toFixed(1));
 
   return (
-    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: '#f6f7f9', minHeight: '100vh', padding: 16 }}>
+    <div style={{ fontFamily: 'system-ui, -apple-system, sans-serif', background: '#f6f7f9', minHeight: '100vh', padding: isNarrow ? 10 : 16 }}>
       <div style={{ maxWidth: 1320, margin: '0 auto' }}>
         <div style={{ fontSize: 10.5, fontWeight: 800, color: gold, letterSpacing: 1, textTransform: 'uppercase' }}>AI Infrastructure Planning</div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: navy, margin: '2px 0' }}>GPU Infrastructure TCO Calculator</h1>
+        <h1 style={{ fontSize: isNarrow ? 19 : 24, fontWeight: 800, color: navy, margin: '2px 0' }}>GPU Infrastructure TCO Calculator</h1>
         <div style={{ fontSize: 12.5, color: grey }}>
           On-Premise {m.platform.label} vs Azure · Serving {m.llm.label} at {tpmShown}M TPM · 5-year horizon
         </div>
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '16px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, margin: '16px 0' }}>
           <Stat label="Fleet Sizing" value={`${m.nodes} ${m.platform.rackBased ? 'racks' : 'nodes'}`} sub={`${m.gpus} ${m.platform.label.replace('NVIDIA ', '')} GPUs · ${Math.round(m.effTokPerGpu)} tok/s/GPU`} />
           <Stat label="On-Prem 5-yr TCO" value={fmtUsdM(m.onprem)} sub={`${fmtUsdM(m.capex)} CAPEX`} color={navy} />
           <Stat label="Azure 3-yr RI" value={fmtUsdM(m.ri3)} sub={`${(m.ri3 / m.onprem).toFixed(1)}× on-prem`} color={teal} />
@@ -76,9 +81,9 @@ export default function App() {
           <Stat label="Break-even vs 3-yr RI" value={fmtBreakEven(m.beRi3)} sub="on-prem pulls ahead" color={gold} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 340px) 1fr', gap: 16, alignItems: 'start' }}>
-          {/* Controls */}
-          <Card style={{ position: 'sticky', top: 16, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 340px) 1fr', gap: 16, alignItems: 'start' }}>
+          {/* Controls — sticky sidebar on desktop, plain block in the single-column flow */}
+          <Card style={isMobile ? {} : { position: 'sticky', top: 16, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}>
             <PlatformSelector platforms={PLATFORMS} order={PLATFORM_ORDER} value={s.platform} onChange={set('platform')} />
             <ModelSelector models={MODELS} order={MODEL_ORDER} value={s.llm} onChange={set('llm')} />
             <SelectorGrid title="Demand Input" options={DEMAND_MODES} value={s.demandMode} onChange={set('demandMode')}
@@ -120,12 +125,13 @@ export default function App() {
               )}
             </Card>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={chartPair}>
               <Card title="5-Year TCO Comparison ($M)">
                 <ResponsiveContainer width="100%" height={230}>
-                  <BarChart data={tcoData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <BarChart data={tcoData} margin={{ top: 10, right: 10, left: -10, bottom: isNarrow ? 8 : 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+                    <XAxis dataKey="name" tick={{ fontSize: isNarrow ? 8.5 : 10 }} interval={0}
+                      angle={isNarrow ? -12 : 0} textAnchor={isNarrow ? 'end' : 'middle'} />
                     <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => '$' + v + 'M'} />
                     <Tooltip formatter={(v) => '$' + v.toFixed(1) + 'M'} />
                     <Bar dataKey="value" radius={[5, 5, 0, 0]}>
@@ -150,7 +156,7 @@ export default function App() {
               </Card>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={chartPair}>
               <Card title="5-Year TCO vs Throughput (node-count steps)">
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={sweep} margin={{ top: 10, right: 5, left: -5, bottom: 0 }}>
@@ -173,10 +179,10 @@ export default function App() {
 
               <Card title="Sensitivity Tornado — On-Prem TCO, drivers ±20%">
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={tornadoData} layout="vertical" margin={{ top: 5, right: 15, left: 40, bottom: 0 }}>
+                  <BarChart data={tornadoData} layout="vertical" stackOffset="sign" margin={{ top: 5, right: 15, left: isNarrow ? 8 : 40, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />
                     <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => (v > 0 ? '+' : '') + v.toFixed(1)} />
-                    <YAxis type="category" dataKey="label" tick={{ fontSize: 9.5 }} width={95} />
+                    <YAxis type="category" dataKey="label" tick={{ fontSize: isNarrow ? 8.5 : 9.5 }} width={isNarrow ? 80 : 95} />
                     <Tooltip formatter={(v) => (v >= 0 ? '+' : '') + '$' + v.toFixed(2) + 'M vs base'} />
                     <ReferenceLine x={0} stroke="#888" label={{ value: `base ${fmtUsdM(tornado.base)}`, fontSize: 9, fill: '#666', position: 'top' }} />
                     <Bar dataKey="negD" name="TCO downside" stackId="t" fill={teal} />

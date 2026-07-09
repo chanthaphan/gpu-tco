@@ -1,3 +1,17 @@
+import { useEffect, useState } from 'react';
+
+/** Reactive CSS media query — used to collapse layouts on small screens. */
+export function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = (e) => setMatches(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [query]);
+  return matches;
+}
+
 export const COLORS = {
   navy: '#0B2545', gold: '#C9A227', teal: '#0E7C7B',
   red: '#B0413E', grey: '#8A8D91', blue: '#3D6FB4',

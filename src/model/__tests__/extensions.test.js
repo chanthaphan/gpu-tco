@@ -21,6 +21,16 @@ describe('LLM model selection', () => {
     expect(m.nodes).toBe(16);
   });
 
+  it('GLM-5.2 (40B active) → factor 0.8 → 17 H200 nodes', () => {
+    expect(llmSpeedFactor({ ...DEFAULTS, llm: 'glm52' })).toBeCloseTo(0.8, 10);
+    expect(computeModel({ ...DEFAULTS, llm: 'glm52' }).nodes).toBe(17);
+  });
+
+  it('GLM-5.2 (753 GB) does not fit a single H100 node', () => {
+    const fit = memoryFit({ ...DEFAULTS, llm: 'glm52', platform: 'h100' });
+    expect(fit.status).toBe('no-fit');
+  });
+
   it('smaller active sets need fewer nodes (Qwen3, Llama 4 Maverick)', () => {
     expect(computeModel({ ...DEFAULTS, llm: 'qwen3' }).nodes).toBe(10);
     expect(computeModel({ ...DEFAULTS, llm: 'llama4mav' }).nodes).toBe(8);

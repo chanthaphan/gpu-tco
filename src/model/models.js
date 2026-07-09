@@ -23,6 +23,10 @@ export const MODELS = {
     id: 'glm45', label: 'GLM-4.5',
     totalB: 355, activeB: 32, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 355,
   },
+  glm52: {
+    id: 'glm52', label: 'GLM-5.2',
+    totalB: 753, activeB: 40, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 753, // zai-org/GLM-5.2-FP8, Jul 2026
+  },
   deepseek: {
     id: 'deepseek', label: 'DeepSeek-V3/R1',
     totalB: 671, activeB: 37, bytesPerParam: 1.0, precision: 'FP8', weightsGb: 671,
@@ -43,5 +47,5 @@ export const MODELS = {
   custom: { id: 'custom', label: 'Custom', custom: true },
 };
 
-export const MODEL_ORDER = ['glm45', 'deepseek', 'qwen3', 'llama4mav', 'gptoss', 'custom'];
+export const MODEL_ORDER = ['glm45', 'glm52', 'deepseek', 'qwen3', 'llama4mav', 'gptoss', 'custom'];
 export const DEFAULT_MODEL = 'glm45';

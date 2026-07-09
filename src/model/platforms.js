@@ -16,6 +16,7 @@ export const PLATFORMS = {
     gpusPerNode: 8,      // HGX 8-GPU node
     nodeCost: 300000,    // USD per 8xH100 node
     nodeKw: 10.0,        // kW IT draw per node
+    hbmGb: 80,           // HBM3 per GPU
     azurePaygHr: 98.32,  // Azure ND H100 v5 PAYG $/hr/node [ref 12]
     rackBased: false,
   },
@@ -26,6 +27,7 @@ export const PLATFORMS = {
     gpusPerNode: 8,
     nodeCost: 340000,
     nodeKw: 10.2,
+    hbmGb: 141,          // HBM3e per GPU
     azurePaygHr: 110.24, // Azure ND H200 v5 PAYG [ref 11,12]
     rackBased: false,
   },
@@ -36,6 +38,7 @@ export const PLATFORMS = {
     gpusPerNode: 8,
     nodeCost: 480000,    // planning estimate (Blackwell pricing volatile)
     nodeKw: 14.3,        // higher per-node draw
+    hbmGb: 192,          // HBM3e per GPU
     azurePaygHr: 160.0,  // planning estimate; confirm when Azure lists ND GB/B-series
     rackBased: false,
   },
@@ -46,6 +49,7 @@ export const PLATFORMS = {
     gpusPerNode: 72,     // rack-scale unit (NVL72), not an 8-GPU node
     nodeCost: 3200000,   // per NVL72 rack, planning estimate
     nodeKw: 120.0,       // per rack IT draw (~120 kW)
+    hbmGb: 186,          // HBM3e per Blackwell GPU in NVL72 (planning estimate)
     azurePaygHr: 1150.0, // per-rack-equivalent planning estimate
     rackBased: true,
   },

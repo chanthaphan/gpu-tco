@@ -26,10 +26,20 @@ Claude Code will read `CLAUDE.md` automatically for full project context.
 ## What it shows
 
 - **Fleet sizing** — GPUs/nodes needed for your throughput at a given utilization target.
+- **LLM model selector** — pick the model you're serving (GLM-4.5, DeepSeek-V3/R1,
+  Qwen3-235B, Llama 4 Maverick, GPT-OSS-120B, or Custom); throughput per GPU scales
+  automatically from active-weight bytes (decode is bandwidth-bound).
+- **Workload builder** — enter TPM directly, or derive it from DAU × requests/day ×
+  tokens/request × peak factor.
+- **GPU memory fit check** — flags models that don't fit one node's HBM (or leave no
+  KV/batching headroom) on the selected platform.
 - **5-year TCO comparison** — on-prem vs the three Azure options.
 - **On-prem cost breakdown** — servers, networking, electricity, colo, maintenance, staff, spares.
+- **TCO vs throughput** — how costs and the node-count step function scale from 1–50M TPM.
 - **Break-even curve** — cumulative cost over 60 months, with the crossover month marked.
-- **Sensitivity** — effective $/million-tokens across utilization levels (the key decision variable).
+- **Sensitivity** — effective $/million-tokens across utilization levels (the key decision
+  variable), with published API prices (DeepSeek, GLM, GPT-class) as reference lines.
+- **Sensitivity tornado** — which assumption moves on-prem TCO the most at ±20%.
 
 Everything recomputes live as you drag the sliders.
 
@@ -39,11 +49,14 @@ Everything recomputes live as you drag the sliders.
 src/
   model/tco.js              ← all cost/sizing math (pure, tested). Edit formulas HERE.
   model/platforms.js        ← H100/H200/B200/GB200 specs. Worked example for extending the model.
-  model/__tests__/          ← Vitest unit tests (17 tests).
-  components/UI.jsx          ← Slider, Section, Stat, Card, PlatformSelector.
+  model/models.js           ← LLM catalog + throughput scaling rule.
+  model/apiPrices.js        ← public API $/M-token benchmarks (sourced, dated).
+  model/__tests__/          ← Vitest unit tests (43 tests).
+  components/UI.jsx          ← Slider, Section, Stat, Card, SelectorGrid, MemoryFitBar.
   App.jsx                    ← wires model → charts.
 CLAUDE.md                    ← context for Claude Code (read this).
 .github/workflows/test.yml   ← CI: tests + build run on every push/PR.
+.github/workflows/deploy.yml ← deploys to GitHub Pages on push to main.
 ```
 
 Switch accelerator platforms (H100 / H200 / B200 / GB200 NVL72) with the selector at the top
@@ -67,6 +80,11 @@ $110.24/hr PAYG.
 
 **Note:** Azure H200 *reserved* rates are proxied from published H100 discounts (35%/55%),
 since Microsoft had not published ND H200 v5 RI pricing as of July 2026. Update when available.
+
+**Model throughput scaling** is a first-order bandwidth rule: platform tok/s/GPU is
+calibrated to GLM-4.5 (32B active, FP8) and scaled by active-weight bytes for other
+models (clamped ×0.25–×4). It ignores prefill, KV bandwidth, and multi-node penalties —
+benchmark your model on your own traffic before committing capital.
 
 **Huawei Ascend** is excluded from the cost math on legal grounds (13 May 2025 US BIS
 worldwide-use ruling). See `CLAUDE.md`.

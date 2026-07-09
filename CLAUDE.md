@@ -30,7 +30,10 @@ src/
   model/
     tco.js                 ← THE MODEL. Pure functions, no React. Single source of truth.
     platforms.js           ← Accelerator definitions (H100/H200/B200/GB200). WORKED EXAMPLE.
-    __tests__/tco.test.js  ← Vitest unit tests for the model.
+    models.js              ← LLM catalog (GLM-4.5/DeepSeek/Qwen3/Llama-4/GPT-OSS + custom).
+    apiPrices.js           ← Public API $/M-token benchmarks (reference lines).
+    __tests__/tco.test.js  ← Vitest unit tests pinning the original model behavior.
+    __tests__/extensions.test.js ← Tests for LLM scaling, workload builder, new plots.
   components/
     UI.jsx                 ← Presentational components (Slider, Section, Stat, Card, PlatformSelector).
   App.jsx                  ← Wires model → recharts visualizations. State lives here.
@@ -64,20 +67,42 @@ change it in `tco.js` and update the tests. Never duplicate math into a componen
 ## The model (src/model/tco.js)
 
 - `DEFAULTS` — every editable input with its sourced default value (see comments inline).
-- `CONTROLS` — slider metadata `[key, label, min, max, step, unit, formatterFn]`; this
-  array drives the UI, so adding an input = add to `DEFAULTS` + `CONTROLS`.
-- `computeModel(inputs)` — returns sizing + all cost figures + break-even months.
+  Includes two *hidden* sensitivity handles not exposed as sliders: `perfMult` (multiplies
+  effective tok/s/GPU) and `nodeCostMult` (multiplies node cost) — both 1 by default, used
+  only by `sensitivityTornado` to vary platform-derived quantities.
+- `CONTROLS` — slider metadata `[key, label, min, max, step, unit, formatterFn, when?]`;
+  this array drives the UI, so adding an input = add to `DEFAULTS` + `CONTROLS`. The
+  optional `when(s)` predicate hides mode-dependent sliders (direct-vs-derived demand,
+  custom-model inputs).
+- `computeModel(inputs)` — returns sizing + all cost figures + break-even months + `llm`,
+  `speedFactor`, `effTokPerGpu`, `tpmEff`, `fit`.
+- `resolveLlm(s)` / `llmSpeedFactor(s)` — selected LLM and its throughput multiplier.
+- `effectiveTpm(s)` — demand in M TPM (direct slider, or derived from workload inputs).
+- `memoryFit(s)` — weights-vs-HBM fit check per serving unit (node / NVL72 rack).
 - `cumulativeCurve(model)` — 61 monthly points for the break-even line chart.
 - `sensitivityByUtilization(model)` — effective $/M-tokens at each utilization level.
+- `tcoVsThroughput(s, {min,max,step})` — TCO sweep across TPM (node-count step curve).
+- `sensitivityTornado(s, pct)` — on-prem TCO impact of each driver at ±pct, ranked.
 
 ### Core formulas (keep these correct)
-- `rawCapacity = (tpm * 1e6 / 60) / (util/100)`  — tokens/sec to provision
-- `nodes = ceil(rawCapacity / (tokPerGpu * 8))`
+- `speedFactor = clamp(REF.activeB*REF.bytesPerParam / (activeB*bytesPerParam), 0.25, 4)`
+  — decode is HBM-bandwidth-bound; platform `tokPerGpu` is calibrated to GLM-4.5
+  (32B active, FP8), so GLM-4.5 is exactly 1.0. Custom model: `customTokPerGpu / 2200`
+  (H200-referenced, unclamped). First-order rule only — ignores prefill, KV bandwidth,
+  EP efficiency, multi-node penalties.
+- `effectiveTpm` (derived mode) = `dauK*1000 * reqPerUser * tokPerReq * peakFactor / 1440 / 1e6`
+  — defaults (300K DAU × 8 req × 2000 tok × 3.0 peak) reproduce exactly 10M TPM.
+- `rawCapacity = (effectiveTpm * 1e6 / 60) / (util/100)`  — tokens/sec to provision
+- `nodes = ceil(rawCapacity / (tokPerGpu * speedFactor * gpusPerNode))`
+- Memory fit: `usable = hbmGb*gpusPerNode*(1 − kvHeadroomPct/100)`; no-fit if weights >
+  unit HBM, tight if weights > usable. Headroom-% by design — no KV-cache formula.
 - On-prem 5-yr = CAPEX (servers + net/storage) + OPEX (electricity + colo + maintenance
   + staff + spares). Electricity = `fleetKw * pue * 8760 * 5 * elecRate` (USD/kWh).
 - Azure 5-yr = `rate/hr * nodes * 8760 * 5 * (1 + egress%)`
 - Break-even months = `CAPEX / (azureMonthly − onpremMonthlyOpex)` (null if Azure is
   cheaper monthly, which shouldn't happen at high util).
+- API benchmark blend = `0.75*input + 0.25*output` per M tokens (3:1 mix; directional
+  comparison only — APIs bill actual tokens with no idle cost).
 
 ## Sourced default assumptions (do not silently change)
 
@@ -89,9 +114,13 @@ change it in `tco.js` and update the tests. Never duplicate math into a componen
 | coloRate | $200/kW/mo | high-density AI colo, metro-market estimate |
 | paygHr | $110.24/hr/node | Azure ND96isr H200 v5, Vantage 6-Jul-2026 |
 | ri1Disc / ri3Disc | 35% / 55% | proxied from Azure H100 reserved discounts |
+| LLM catalog (models.js) | params/precision/weights per model | published model cards; throughput derived via speedFactor rule |
+| hbmGb (platforms.js) | 80 / 141 / 192 / 186 GB per GPU | vendor specs; GB200 figure is a planning estimate |
+| API prices (apiPrices.js) | DeepSeek V4 Flash $0.14/$0.28 · GLM-4.5 $0.60/$2.20 · GPT-5.4 $2.50/$15 | provider pricing pages, verified Jul 2026 |
 
 Azure H200 reserved rates are **proxies** (Microsoft hadn't published ND H200 v5 RI rates
 as of July 2026). If you wire in real rates, update the comment and the README.
+API list prices drift — re-verify `apiPrices.js` and bump each entry's `asOf` when touched.
 
 ## Conventions
 
@@ -99,11 +128,14 @@ as of July 2026). If you wire in real rates, update the comment and the README.
 - Charts use **recharts**. Keep them responsive (`ResponsiveContainer`).
 - No browser storage APIs unless asked. Keep everything in React state.
 - Run `npm test` after any model change — the tests encode the expected defaults
-  (e.g. 14 nodes / 112 GPUs, ~$14.4M on-prem total).
+  (e.g. 14 nodes / 112 GPUs, ~$14.4M on-prem total; GLM-4.5 speedFactor exactly 1.0).
 
 ## Good first tasks / likely requests
 
 - ✅ **B200 / GB200 platform switcher** — DONE (see `platforms.js`; use it as the template).
+- ✅ **LLM model catalog + custom entry** — DONE (`models.js`, speedFactor scaling).
+- ✅ **Workload builder** (derive TPM from DAU/requests/tokens/peak) — DONE.
+- ✅ **TCO-vs-throughput, tornado, API benchmark, memory-fit plots** — DONE.
 - Add **"export scenario to CSV/JSON"** button (serialize current `s` + `computeModel`).
 - Add **save/compare two scenarios** side-by-side.
 - Add a **currency toggle** on all chart axes (USD + one user-configured local currency).

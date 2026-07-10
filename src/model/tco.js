@@ -209,6 +209,30 @@ export function platformMatrix(s) {
 }
 
 /**
+ * Node-throughput walkthrough for the current selection: the chain from the
+ * calibrated per-GPU benchmark to the fleet size, plus the bandwidth-bound
+ * sanity check (each decode step streams the model's active weights from HBM
+ * once, so forward passes/sec ≤ HBM bandwidth ÷ active-weight bytes; the
+ * calibrated rate divided by that ceiling is the implied effective concurrency).
+ */
+export function throughputExplainer(s) {
+  const m = computeModel(s);
+  const plat = m.platform;
+  const model = m.llm;
+  const activeGb = model.custom ? null : model.activeB * model.bytesPerParam;
+  const stepsPerSec = activeGb && plat.specs ? (plat.specs.bwTBs * 1000) / activeGb : null;
+  const nodeTokS = m.effTokPerGpu * plat.gpusPerNode;
+  return {
+    plat, model, specs: plat.specs || null,
+    calibrated: plat.tokPerGpu, refActiveGb: REF.activeB * REF.bytesPerParam,
+    activeGb, speedFactor: m.speedFactor, effTokPerGpu: m.effTokPerGpu,
+    gpusPerNode: plat.gpusPerNode, nodeTokS,
+    rawCap: m.rawCap, nodesExact: m.rawCap / nodeTokS, nodes: m.nodes,
+    stepsPerSec, impliedBatch: stepsPerSec ? m.effTokPerGpu / stepsPerSec : null,
+  };
+}
+
+/**
  * Azure Model-as-a-Service comparison: what the same sustained token volume would
  * cost as pay-per-token MaaS, per provider, plus the largest direct-TPM demand at
  * which MaaS is still cheaper than building on-prem. Directional: MaaS bills actual

@@ -19,6 +19,12 @@ export const PLATFORMS = {
     hbmGb: 80,           // HBM3 per GPU
     azurePaygHr: 98.32,  // Azure ND H100 v5 PAYG $/hr/node [ref 12]
     rackBased: false,
+    // Technical specs (SXM form factor) — vendor datasheet values
+    specs: {
+      hbmType: 'HBM3', bwTBs: 3.35, fp8Pflops: 1.98, tdpW: 700,
+      interconnect: 'NVLink 4 · 900 GB/s',
+      ref: 'NVIDIA H100 datasheet', url: 'https://www.nvidia.com/en-us/data-center/h100/',
+    },
   },
   h200: {
     id: 'h200',
@@ -30,6 +36,11 @@ export const PLATFORMS = {
     hbmGb: 141,          // HBM3e per GPU
     azurePaygHr: 110.24, // Azure ND H200 v5 PAYG [ref 11,12]
     rackBased: false,
+    specs: {
+      hbmType: 'HBM3e', bwTBs: 4.8, fp8Pflops: 1.98, tdpW: 700,
+      interconnect: 'NVLink 4 · 900 GB/s',
+      ref: 'NVIDIA H200 datasheet', url: 'https://www.nvidia.com/en-us/data-center/h200/',
+    },
   },
   b200: {
     id: 'b200',
@@ -42,6 +53,11 @@ export const PLATFORMS = {
     hbmGb: 192,          // HBM3e per GPU
     azurePaygHr: 160.0,  // planning estimate; confirm when Azure lists ND GB/B-series
     rackBased: false,
+    specs: {
+      hbmType: 'HBM3e', bwTBs: 8.0, fp8Pflops: 4.5, tdpW: 1000,
+      interconnect: 'NVLink 5 · 1.8 TB/s',
+      ref: 'NVIDIA DGX B200 datasheet', url: 'https://www.nvidia.com/en-us/data-center/dgx-b200/',
+    },
   },
   gb200: {
     id: 'gb200',
@@ -55,6 +71,11 @@ export const PLATFORMS = {
     hbmGb: 186,          // HBM3e per Blackwell GPU in NVL72 (planning estimate)
     azurePaygHr: 1150.0, // per-rack-equivalent planning estimate
     rackBased: true,
+    specs: {
+      hbmType: 'HBM3e', bwTBs: 8.0, fp8Pflops: 4.5, tdpW: 1200,
+      interconnect: 'NVL72 domain · 130 TB/s aggregate',
+      ref: 'NVIDIA GB200 NVL72 page', url: 'https://www.nvidia.com/en-us/data-center/gb200-nvl72/',
+    },
   },
   // Huawei Ascend (910C, 950PR) was removed from the calculator on explicit user
   // instruction (10 Jul 2026) — US BIS GP10 (13 May 2025) makes worldwide use of

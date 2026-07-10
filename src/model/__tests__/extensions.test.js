@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeModel, effectiveTpm, llmSpeedFactor, resolveLlm, memoryFit,
-  tcoVsThroughput, sensitivityTornado, platformMatrix, maasComparison, DEFAULTS, CONSTANTS,
+  tcoVsThroughput, sensitivityTornado, platformMatrix, maasComparison,
+  throughputExplainer, DEFAULTS, CONSTANTS,
 } from '../tco.js';
 import { PLATFORMS, PLATFORM_ORDER } from '../platforms.js';
 import { MODELS, SPEED_CLAMP } from '../models.js';
@@ -209,6 +210,39 @@ describe('platform matrix', () => {
       expect(model.contextK).toBeGreaterThan(0);
       expect(model.license).toBeTruthy();
     }
+  });
+});
+
+describe('GPU specs & throughput explainer', () => {
+  it('every platform carries sourced technical specs', () => {
+    for (const p of Object.values(PLATFORMS)) {
+      expect(p.specs.bwTBs).toBeGreaterThan(0);
+      expect(p.specs.fp8Pflops).toBeGreaterThan(0);
+      expect(p.specs.tdpW).toBeGreaterThan(0);
+      expect(p.specs.hbmType).toBeTruthy();
+      expect(p.specs.ref).toBeTruthy();
+      expect(p.specs.url).toMatch(/^https:\/\/www\.nvidia\.com/);
+    }
+  });
+
+  it('walkthrough chain is consistent with computeModel', () => {
+    const tx = throughputExplainer(DEFAULTS);
+    const m = computeModel(DEFAULTS);
+    expect(tx.effTokPerGpu).toBe(m.effTokPerGpu);
+    expect(tx.nodeTokS).toBeCloseTo(m.effTokPerGpu * m.platform.gpusPerNode, 6);
+    expect(Math.ceil(tx.nodesExact)).toBe(m.nodes);
+  });
+
+  it('bandwidth ceiling: H200 at GLM-5.2 = 4.8 TB/s ÷ 40 GB = 120 passes/s, ~15 tokens/pass', () => {
+    const tx = throughputExplainer(DEFAULTS);
+    expect(tx.stepsPerSec).toBeCloseTo(120, 6);
+    expect(tx.impliedBatch).toBeCloseTo(1760 / 120, 6);
+  });
+
+  it('custom model skips the bandwidth physics (unknown active bytes)', () => {
+    const tx = throughputExplainer({ ...DEFAULTS, llm: 'custom' });
+    expect(tx.stepsPerSec).toBeNull();
+    expect(tx.activeGb).toBeNull();
   });
 });
 

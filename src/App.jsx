@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
   DEFAULTS, CONTROLS, computeModel, cumulativeCurve, sensitivityByUtilization,
-  tcoVsThroughput, sensitivityTornado, platformMatrix, maasComparison,
+  tcoVsThroughput, sensitivityTornado, platformMatrix, maasComparison, throughputExplainer,
 } from './model/tco.js';
 import { PLATFORMS, PLATFORM_ORDER } from './model/platforms.js';
 import { MODELS, MODEL_ORDER } from './model/models.js';
@@ -40,6 +40,7 @@ export default function App() {
   const tornado = useMemo(() => sensitivityTornado(s), [s]);
   const matrix = useMemo(() => platformMatrix(s), [s]);
   const maas = useMemo(() => maasComparison(s), [s]);
+  const tx = useMemo(() => throughputExplainer(s), [s]);
 
   const tornadoData = tornado.rows.map((r) => ({
     label: L.controls[r.key] || r.label,
@@ -161,6 +162,56 @@ export default function App() {
               {m.fit.status === 'tight' && (
                 <div style={{ fontSize: 11.5, color: '#8a6d1a', fontWeight: 600, marginTop: 8 }}>
                   {L.memTight(s.kvHeadroomPct)}
+                </div>
+              )}
+            </Card>
+
+            <Card title={L.chGpu}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1.5px solid #e0e3e7' }}>
+                      {[L.mxPlatform, L.gsHbm, L.gsBw, L.gsFp8, L.gsTdp, L.gsLink, L.gsSrc].map((h, i) => (
+                        <th key={h} style={{ fontSize: 9.5, color: grey, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, textAlign: i === 0 ? 'left' : 'right', padding: '4px 8px' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrix.map((r) => {
+                      const p = PLATFORMS[r.id];
+                      const active = r.id === s.platform;
+                      const td = { fontSize: 11.5, color: '#334', textAlign: 'right', padding: '5px 8px', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' };
+                      return (
+                        <tr key={r.id} style={{ borderBottom: '1px solid #eef0f2', background: active ? '#0B25450D' : 'transparent' }}>
+                          <td style={{ ...td, textAlign: 'left', fontWeight: active ? 800 : 600, color: active ? navy : '#334' }}>{p.label.replace('NVIDIA ', '')}{active ? ' ◂' : ''}</td>
+                          <td style={td}>{p.hbmGb} GB {p.specs.hbmType}</td>
+                          <td style={td}>{p.specs.bwTBs.toFixed(2)} TB/s</td>
+                          <td style={td}>{p.specs.fp8Pflops.toFixed(1)} PFLOPS</td>
+                          <td style={td}>{p.specs.tdpW.toLocaleString()} W</td>
+                          <td style={td}>{p.specs.interconnect}</td>
+                          <td style={{ ...td, fontSize: 10 }}>
+                            <a href={p.specs.url} target="_blank" rel="noreferrer" style={{ color: teal }}>{p.specs.ref}</a>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: navy, margin: '12px 0 4px' }}>{L.gsHow}</div>
+              <ol style={{ fontSize: 11.5, color: '#334', margin: '0 0 8px', paddingLeft: 20, lineHeight: 1.7 }}>
+                <li>{L.gsStep1(tx.calibrated.toLocaleString(), tx.plat.label)}</li>
+                <li>{tx.model.custom
+                  ? L.gsStep2Custom(s.customTokPerGpu.toLocaleString())
+                  : L.gsStep2(tx.activeGb.toFixed(0), tx.model.label, tx.speedFactor.toFixed(2))}</li>
+                <li>{L.gsStep3(tx.calibrated.toLocaleString(), tx.speedFactor.toFixed(2), Math.round(tx.effTokPerGpu).toLocaleString())}</li>
+                <li>{L.gsStep4(Math.round(tx.effTokPerGpu).toLocaleString(), tx.gpusPerNode, tx.plat.rackBased ? L.unitRack : L.unitNode, Math.round(tx.nodeTokS).toLocaleString())}</li>
+                <li>{L.gsStep5(Math.round(tx.rawCap).toLocaleString(), Math.round(tx.nodeTokS).toLocaleString(), tx.nodesExact.toFixed(2), tx.nodes,
+                  tx.plat.rackBased ? (locale === 'en' && tx.nodes > 1 ? L.unitRacks : L.unitRack) : (locale === 'en' && tx.nodes > 1 ? L.unitNodes : L.unitNode))}</li>
+              </ol>
+              {tx.stepsPerSec && (
+                <div style={{ fontSize: 11, color: grey, lineHeight: 1.5, background: '#f4f6f8', borderRadius: 8, padding: '8px 12px' }}>
+                  {L.gsPhysics(tx.specs.bwTBs.toFixed(2), tx.activeGb.toFixed(0), Math.round(tx.stepsPerSec), tx.impliedBatch.toFixed(0), tx.specs.fp8Pflops.toFixed(1))}
                 </div>
               )}
             </Card>

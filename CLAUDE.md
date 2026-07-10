@@ -9,22 +9,21 @@ An interactive **GPU Infrastructure Total Cost of Ownership (TCO) calculator** f
 weighing an on-prem GPU build against cloud. It compares the 5-year cost of serving a large
 open-source Mixture-of-Experts LLM at **10 million tokens per minute (10M TPM)** across:
 
-- **On-premise NVIDIA H200** (the default build), plus H100 / B200 / GB200 NVL72 /
-  Huawei Ascend 910C platforms
-- **Azure ND H200 v5** — pay-as-you-go, 1-year Reserved, 3-year Reserved
+- **On-premise NVIDIA H200** (the default build), plus H100 / B200 / GB200 NVL72 platforms
+- **Azure ND H200 v5** — pay-as-you-go, 1-year Reserved, 3-year Reserved — and
+  **Azure MaaS** (pay-per-token) as a third deployment shape
 
 The default (reference model A) is **GLM-5.2** (753B/40B MoE); **DeepSeek-V3/R1** is
 reference model B. GLM-4.5 remains the throughput *calibration anchor* (speedFactor 1.0).
 It computes fleet sizing, itemized 5-year TCO, break-even timelines, and a
 utilization-sensitivity curve, all updating live as the user drags sliders.
 
-**Huawei Ascend is included in the cost math with a mandatory legal caution** (added on
-explicit user instruction, 10 Jul 2026, at gray-market planning rates). A 13 May 2025 US
-BIS GP10 ruling makes using Ascend 910-series chips anywhere in the world an
-export-control violation — a material sanctions risk for regulated or USD-clearing
-institutions. The `caution` field on the ascend platform entry is surfaced in the UI and
-report wherever Ascend appears; **do not remove or soften that warning**, and keep the
-legal framing prominent in any output that shows Ascend costs.
+**Huawei Ascend is excluded from the calculator and the report** (removed on explicit
+user instruction, 10 Jul 2026, after previously being included). The legal context: a
+13 May 2025 US BIS GP10 ruling makes using Ascend 910-series chips anywhere in the world
+an export-control violation — a material sanctions risk for regulated or USD-clearing
+institutions. Do not re-add Ascend as a platform without an explicit instruction, and if
+re-added, surface the legal caution prominently wherever it appears.
 
 ## Architecture
 
@@ -118,7 +117,7 @@ change it in `tco.js` and update the tests. Never duplicate math into a componen
 |---|---|---|
 | tokPerGpu (H200) | 2200 tok/s | vLLM wide-EP, CoreWeave H200 cluster (Dec 2025) |
 | nodeCost | $340,000 / 8×H200 | market estimate |
-| ascend nodeCost / tokPerGpu | $220,000 / 1300 tok/s | gray-market planning estimate (~180–200K CNY/chip reported); derated from Huawei CloudMatrix-Infer 1,943 tok/s decode |
+| tokPerGpu (B200 / GB200) | 2500 / 5000 tok/s | derated from SemiAnalysis InferenceX DeepSeek-R1 @ 75 tok/s/user: 2,558 / 5,790 (verified Jul 2026) |
 | elecRate | $0.13/kWh | blended industrial rate — users should set their local tariff |
 | coloRate | $200/kW/mo | high-density AI colo, metro-market estimate |
 | paygHr | $110.24/hr/node | Azure ND96isr H200 v5, Vantage 6-Jul-2026 |

@@ -91,12 +91,7 @@ export function PlatformSelector({ platforms, order, value, onChange, L, money }
   return (
     <SelectorGrid title={L.selPlatform} options={order.map((id) => platforms[id])}
       value={value} onChange={onChange}
-      footer={
-        <>
-          {p.tokPerGpu.toLocaleString()} tok/s/GPU · {p.gpusPerNode} GPU/{unit} · {money.m(p.nodeCost)}/{unit}
-          {p.caution && <div style={{ color: COLORS.red, fontWeight: 700, marginTop: 3 }}>⚠ {L.ascendCaution}</div>}
-        </>
-      } />
+      footer={`${p.tokPerGpu.toLocaleString()} tok/s/GPU · ${p.gpusPerNode} GPU/${unit} · ${money.m(p.nodeCost)}/${unit}`} />
   );
 }
 

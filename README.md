@@ -1,8 +1,8 @@
 # GPU Infrastructure TCO Calculator
 
 Interactive 5-year Total Cost of Ownership calculator comparing **on-premise GPU builds**
-(NVIDIA H100/H200/B200/GB200, Huawei Ascend 910C) against **Azure ND H200 v5**
-(PAYG / 1-yr RI / 3-yr RI) for serving a large open-source MoE LLM (GLM-5.2 baseline,
+(NVIDIA H100/H200/B200/GB200) against **Azure ND H200 v5** (PAYG / 1-yr RI / 3-yr RI)
+and **Azure MaaS** for serving a large open-source MoE LLM (GLM-5.2 baseline,
 DeepSeek-V3/R1 reference) at **10M tokens/minute**.
 
 Built for AI infrastructure teams weighing on-prem GPU builds against cloud. React + Vite + Recharts.
@@ -95,11 +95,10 @@ calibrated to GLM-4.5 (32B active, FP8) and scaled by active-weight bytes for ot
 models (clamped ×0.25–×4). It ignores prefill, KV bandwidth, and multi-node penalties —
 benchmark your model on your own traffic before committing capital.
 
-**Huawei Ascend 910C** is included at gray-market planning rates ($220K/8-NPU node,
-1,300 tok/s/NPU derated). Caution: the 13 May 2025 US BIS GP10 ruling makes worldwide use
-of Ascend 910-series chips an export-control violation — the calculator surfaces this
-warning whenever Ascend is selected, and any deployment requires explicit legal/compliance
-sign-off. See `CLAUDE.md`.
+**Huawei Ascend** is excluded from the cost math (13 May 2025 US BIS worldwide-use
+ruling). **B200/GB200 throughput** is derated from SemiAnalysis InferenceX DeepSeek-R1
+measurements (2,558 / 5,790 tok/s/GPU at 75 tok/s/user, verified Jul 2026); note GB200
+falls to ~3,988 at a stricter 120 tok/s/user SLO. See `CLAUDE.md`.
 
 ## Caveats
 

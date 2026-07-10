@@ -34,7 +34,8 @@ export const PLATFORMS = {
   b200: {
     id: 'b200',
     label: 'NVIDIA B200',
-    tokPerGpu: 2500,     // TRT-LLM FP4, derated [ref 6]
+    tokPerGpu: 2500,     // derated from 2,558 tok/s/GPU @ 75 tok/s/user interactivity,
+                         // DeepSeek-R1, SemiAnalysis InferenceX (verified Jul 2026) [ref 6]
     gpusPerNode: 8,
     nodeCost: 480000,    // planning estimate (Blackwell pricing volatile)
     nodeKw: 14.3,        // higher per-node draw
@@ -45,7 +46,9 @@ export const PLATFORMS = {
   gb200: {
     id: 'gb200',
     label: 'NVIDIA GB200 NVL72',
-    tokPerGpu: 5000,     // SGLang FP8+NVFP4, derated from peak [ref 7]
+    tokPerGpu: 5000,     // derated from 5,790 tok/s/GPU @ 75 tok/s/user interactivity,
+                         // DeepSeek-R1, SemiAnalysis InferenceX (verified Jul 2026); falls to
+                         // ~3,988 at 120 tok/s/user — latency SLO moves this a lot [ref 7]
     gpusPerNode: 72,     // rack-scale unit (NVL72), not an 8-GPU node
     nodeCost: 3200000,   // per NVL72 rack, planning estimate
     nodeKw: 120.0,       // per rack IT draw (~120 kW)
@@ -53,37 +56,10 @@ export const PLATFORMS = {
     azurePaygHr: 1150.0, // per-rack-equivalent planning estimate
     rackBased: true,
   },
-  ascend: {
-    id: 'ascend',
-    label: 'Huawei Ascend 910C',
-    tokPerGpu: 1300,     // sustained/derated from Huawei's 1,943 tok/s/NPU decode (CloudMatrix-Infer)
-    gpusPerNode: 8,      // 8-NPU Atlas-class server
-    nodeCost: 220000,    // gray-market planning estimate (~180-200K CNY/chip reported); no official list price
-    nodeKw: 8.5,         // ~800W/NPU + overhead; system-level efficiency well below Blackwell
-    hbmGb: 128,          // per 910C package
-    azurePaygHr: 65.0,   // no Azure Ascend SKU — equivalent Azure H200 capacity for one Ascend node
-    rackBased: false,
-    // Included per explicit instruction (Jul 2026). US BIS GP10 guidance (13 May 2025)
-    // makes worldwide use of Ascend 910-series an export-control violation — surface
-    // this caution wherever the platform is selectable; do not remove it.
-    caution: 'US BIS GP10 (13 May 2025): worldwide-use export-control violation — legal sign-off required',
-  },
-  ascend950: {
-    id: 'ascend950',
-    label: 'Huawei Ascend 950PR',
-    tokPerGpu: 1500,     // planning estimate — launched Mar 2026, 1 PFLOPS FP8, but the PR
-                         // variant is prefill-optimized with HiBL HBM at ~1.6 TB/s, so
-                         // decode gains over the 910C are modest despite the compute jump
-    gpusPerNode: 8,      // Atlas 350-based 8-NPU server assumption
-    nodeCost: 240000,    // planning estimate; no list price (launch coverage, no public pricing)
-    nodeKw: 9.0,         // ~0.9 kW/NPU + overhead, planning estimate
-    hbmGb: 128,          // HiBL 1.0 spec 128 GB (Atlas 350 card reported at 112 GB)
-    azurePaygHr: 75.0,   // no Azure SKU — equivalent Azure H200 capacity for one node
-    rackBased: false,
-    // Same US export-control exposure class as the 910 series (PRC 3A090 advanced chips).
-    caution: 'US BIS GP10 (13 May 2025): worldwide-use export-control violation — legal sign-off required',
-  },
+  // Huawei Ascend (910C, 950PR) was removed from the calculator on explicit user
+  // instruction (10 Jul 2026) — US BIS GP10 (13 May 2025) makes worldwide use of
+  // these parts an export-control violation. Do not re-add without instruction.
 };
 
-export const PLATFORM_ORDER = ['h100', 'h200', 'b200', 'gb200', 'ascend', 'ascend950'];
+export const PLATFORM_ORDER = ['h100', 'h200', 'b200', 'gb200'];
 export const DEFAULT_PLATFORM = 'h200';

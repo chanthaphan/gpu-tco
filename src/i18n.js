@@ -43,7 +43,6 @@ export const T = {
     derivedNote: (tpm) => `Derived demand: ${tpm}M TPM at peak`,
     customNote: 'Set tok/s/GPU and weights under LLM Serving below',
     modelSpec: (m) => `${m.totalB}B total · ${m.activeB}B active · ${m.precision} · ${m.weightsGb} GB weights`,
-    ascendCaution: 'US BIS GP10 (13 May 2025): worldwide-use export-control violation — legal sign-off required',
     // sections / controls (en falls back to the labels in tco.js)
     sections: {}, controls: {},
     inputsUsdNote: '',
@@ -79,7 +78,7 @@ export const T = {
     maasRatio: '× on-prem', maasBe: 'MaaS wins below',
     maasBeVal: (v) => `~${v}M TPM`,
     maasNote: 'Standard Foundry pay-per-token rates (3:1 in/out blend; Sonnet 5 promo $2/$10 runs to 31 Aug 2026). MaaS carries zero CAPEX, zero ops and frontier-model quality, and bills only actual tokens — it wins for low or unproven volume, prototypes, and burst. PTU (provisioned throughput) and Batch (~50% off) deployments sit between these rates and IaaS. At sustained scale the gap is structural.',
-    controlsFooter: 'Defaults from the sourced 5-yr TCO analysis. Azure RI rates proxied from H100 discounts. Model throughput scaled from active-weight bytes (see models.js) — benchmark before committing. Huawei Ascend included at gray-market planning rates; the 13 May 2025 US BIS GP10 ruling makes worldwide use an export-control violation — requires explicit legal/compliance sign-off.',
+    controlsFooter: 'Defaults from the sourced 5-yr TCO analysis. Azure RI rates proxied from H100 discounts. Model throughput scaled from active-weight bytes (see models.js); B200/GB200 rates verified against SemiAnalysis InferenceX (Jul 2026) — benchmark before committing. Huawei Ascend is excluded (13 May 2025 US BIS worldwide-use ruling).',
     pageFooter: 'All figures are planning estimates. Throughput varies 2–3× with sequence length, batch size, and latency SLO — and the model-throughput scaling here is a first-order bandwidth rule. Benchmark your chosen model on your own traffic mix before committing. See CLAUDE.md and README.md for the full sourced assumptions.',
   },
   th: {
@@ -95,7 +94,6 @@ export const T = {
     derivedNote: (tpm) => `ความต้องการที่คำนวณได้: ${tpm}M TPM ที่ช่วงพีค`,
     customNote: 'กำหนด tok/s/GPU และขนาดโมเดลในหัวข้อ "การให้บริการ LLM" ด้านล่าง',
     modelSpec: (m) => `รวม ${m.totalB}B · แอคทีฟ ${m.activeB}B · ${m.precision} · น้ำหนัก ${m.weightsGb} GB`,
-    ascendCaution: 'US BIS GP10 (13 พ.ค. 2025): การใช้งานทั่วโลกเป็นการละเมิดมาตรการควบคุมการส่งออกของสหรัฐฯ — ต้องผ่านการอนุมัติด้านกฎหมาย/กำกับดูแลก่อน',
     sections: {
       'Workload': 'ปริมาณงาน', 'LLM Serving': 'การให้บริการ LLM',
       'On-Prem · Hardware': 'On-Prem · ฮาร์ดแวร์', 'On-Prem · Operating': 'On-Prem · ค่าดำเนินงาน', 'Azure': 'Azure',
@@ -140,7 +138,7 @@ export const T = {
     maasRatio: '× ของ on-prem', maasBe: 'MaaS ถูกกว่าเมื่อต่ำกว่า',
     maasBeVal: (v) => `~${v}M TPM`,
     maasNote: 'อัตรามาตรฐานแบบจ่ายตามโทเคนของ Foundry (สัดส่วน in/out 3:1; Sonnet 5 ราคาโปรโมชัน $2/$10 ถึง 31 ส.ค. 2026) MaaS ไม่มี CAPEX ไม่มีภาระดูแลระบบ ได้คุณภาพโมเดลระดับ frontier และคิดเงินตามโทเคนจริง — เหมาะกับปริมาณงานต่ำหรือยังไม่แน่นอน งานต้นแบบ และงานช่วงพีค ตัวเลือก PTU (จองกำลังประมวลผล) และ Batch (ลด ~50%) อยู่ระหว่างอัตรานี้กับ IaaS ที่ปริมาณงานต่อเนื่องสูงส่วนต่างเป็นเชิงโครงสร้าง',
-    controlsFooter: 'ค่าเริ่มต้นมาจากการวิเคราะห์ TCO 5 ปีพร้อมแหล่งอ้างอิง อัตรา RI ของ Azure ประมาณจากส่วนลด H100 ความเร็วโมเดลปรับตามขนาดพารามิเตอร์แอคทีฟ (ดู models.js) — ควรทำ benchmark ก่อนตัดสินใจ Huawei Ascend รวมอยู่ในการคำนวณด้วยราคาประมาณการตลาดเทา; คำวินิจฉัย US BIS GP10 (13 พ.ค. 2025) ทำให้การใช้งานทั่วโลกเป็นการละเมิดมาตรการควบคุมการส่งออก — ต้องผ่านการอนุมัติด้านกฎหมาย/กำกับดูแลอย่างชัดเจน',
+    controlsFooter: 'ค่าเริ่มต้นมาจากการวิเคราะห์ TCO 5 ปีพร้อมแหล่งอ้างอิง อัตรา RI ของ Azure ประมาณจากส่วนลด H100 ความเร็วโมเดลปรับตามขนาดพารามิเตอร์แอคทีฟ (ดู models.js); อัตรา B200/GB200 ตรวจสอบกับ SemiAnalysis InferenceX (ก.ค. 2026) — ควรทำ benchmark ก่อนตัดสินใจ Huawei Ascend ไม่รวมในการคำนวณ (คำวินิจฉัย US BIS 13 พ.ค. 2025)',
     pageFooter: 'ตัวเลขทั้งหมดเป็นประมาณการเพื่อการวางแผน ความเร็วจริงแปรผัน 2–3 เท่าตามความยาว sequence, ขนาด batch และ SLO ด้านเวลาตอบสนอง — และการปรับความเร็วตามโมเดลเป็นกฎประมาณการอันดับหนึ่งเท่านั้น ควร benchmark โมเดลที่เลือกด้วยทราฟฟิกจริงก่อนตัดสินใจ ดูสมมติฐานพร้อมแหล่งอ้างอิงทั้งหมดใน CLAUDE.md และ README.md',
   },
 };

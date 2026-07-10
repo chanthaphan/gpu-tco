@@ -106,22 +106,10 @@ describe('memory fit', () => {
     expect(fit.unitLabel).toBe('node');
   });
 
-  it('Ascend 910C: GLM-5.2 is tight (753 GB vs 1,024 GB node), DeepSeek fits', () => {
-    expect(memoryFit({ ...DEFAULTS, platform: 'ascend' }).status).toBe('tight');
-    expect(memoryFit({ ...DEFAULTS, llm: 'deepseek', platform: 'ascend' }).status).toBe('fits');
-  });
-
-  it('Ascend 910C sizes 29 nodes for the GLM-5.2 baseline workload', () => {
-    const m = computeModel({ ...DEFAULTS, platform: 'ascend' });
-    expect(m.nodes).toBe(29);
-    expect(m.gpus).toBe(232);
-  });
-
-  it('Ascend 950PR sizes 25 nodes and carries the same legal caution', () => {
-    const m = computeModel({ ...DEFAULTS, platform: 'ascend950' });
-    expect(m.nodes).toBe(25);
-    expect(m.gpus).toBe(200);
-    expect(PLATFORMS.ascend950.caution).toBe(PLATFORMS.ascend.caution);
+  it('Huawei Ascend stays removed from the platform catalog', () => {
+    expect(PLATFORMS.ascend).toBeUndefined();
+    expect(PLATFORMS.ascend950).toBeUndefined();
+    expect(PLATFORM_ORDER).toEqual(['h100', 'h200', 'b200', 'gb200']);
   });
 
   it('DeepSeek does not fit a single H100 node (671 GB > 640 GB)', () => {

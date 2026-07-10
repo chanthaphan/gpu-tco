@@ -4,6 +4,7 @@
 
 import { PLATFORMS, PLATFORM_ORDER, DEFAULT_PLATFORM } from './platforms.js';
 import { MODELS, DEFAULT_MODEL, REF, SPEED_CLAMP } from './models.js';
+import { maasBenchmarks } from './apiPrices.js';
 
 export const CONSTANTS = {
   HOURS_PER_YEAR: 8760,
@@ -204,6 +205,30 @@ export function platformMatrix(s) {
       effTokPerGpu: m.effTokPerGpu, nodes: m.nodes, gpus: m.gpus,
       onprem: m.onprem, fit: m.fit.status,
     };
+  });
+}
+
+/**
+ * Azure Model-as-a-Service comparison: what the same sustained token volume would
+ * cost as pay-per-token MaaS, per provider, plus the largest direct-TPM demand at
+ * which MaaS is still cheaper than building on-prem. Directional: MaaS bills actual
+ * tokens with no idle cost, and the hosted frontier models differ in quality from
+ * the self-hosted open model.
+ */
+export function maasComparison(s) {
+  const { HOURS_PER_YEAR, HORIZON_YEARS } = CONSTANTS;
+  const minutes = 60 * HOURS_PER_YEAR * HORIZON_YEARS;
+  const tokensM = effectiveTpm(s) * minutes; // million tokens over the horizon
+  const onprem = computeModel(s).onprem;
+  return maasBenchmarks().map((p) => {
+    const cost = tokensM * p.blended;
+    let beTpm = null;
+    for (let tpm = 0.1; tpm <= 50.001; tpm += 0.1) {
+      const maas = tpm * minutes * p.blended;
+      if (maas <= computeModel({ ...s, demandMode: 'direct', tpm }).onprem) beTpm = tpm;
+      else break;
+    }
+    return { ...p, tokensM, cost, ratio: cost / onprem, beTpm };
   });
 }
 

@@ -43,6 +43,9 @@ Claude Code will read `CLAUDE.md` automatically for full project context.
 - **Break-even curve** — cumulative cost over 60 months, with the crossover month marked.
 - **Sensitivity** — effective $/million-tokens across utilization levels (the key decision
   variable), with published API prices (DeepSeek, GLM, GPT-class) as reference lines.
+- **Azure MaaS comparison** — what the same token volume costs as pay-per-token
+  Model-as-a-Service (GPT-5.5 and Claude Sonnet 5 on Microsoft Foundry), with the
+  break-even volume below which MaaS beats building.
 - **Sensitivity tornado** — which assumption moves on-prem TCO the most at ±20%.
 - **EN/$ ↔ ไทย/฿ toggle** — switches the UI language and converts all money displays to
   THB at 33.4/USD. Inputs and the model stay USD-native; the conversion is display-only.

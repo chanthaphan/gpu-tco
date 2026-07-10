@@ -26,6 +26,19 @@ export const API_PRICES = {
     inputPerM: 2.50, outputPerM: 15.00,
     source: 'developers.openai.com pricing', asOf: '2026-07',
   },
+  // Azure MaaS (Microsoft Foundry, standard pay-per-token deployment).
+  // Other MaaS deployment options exist: PTU (provisioned throughput) and Batch (~50% off,
+  // async) — treat the standard rates below as the elastic upper bound.
+  gpt55Azure: {
+    id: 'gpt55Azure', label: 'GPT-5.5 (Azure MaaS)', maas: true, deployment: 'Foundry standard',
+    inputPerM: 5.00, outputPerM: 30.00,
+    source: 'Azure OpenAI pricing (GA Jun 2026)', asOf: '2026-07',
+  },
+  sonnet5Azure: {
+    id: 'sonnet5Azure', label: 'Claude Sonnet 5 (Azure MaaS)', maas: true, deployment: 'Foundry standard',
+    inputPerM: 3.00, outputPerM: 15.00, // standard rate; $2/$10 promo runs through 31 Aug 2026
+    source: 'Microsoft Foundry Claude pricing', asOf: '2026-07',
+  },
 };
 
 export const blendedApiPrice = (p, inputShare = INPUT_SHARE) =>
@@ -35,4 +48,11 @@ export const blendedApiPrice = (p, inputShare = INPUT_SHARE) =>
 export const apiBenchmarks = () =>
   Object.values(API_PRICES)
     .map((p) => ({ id: p.id, label: p.label, blended: blendedApiPrice(p) }))
+    .sort((a, b) => a.blended - b.blended);
+
+/** Azure MaaS entries only (for the deployment-option comparison). */
+export const maasBenchmarks = () =>
+  Object.values(API_PRICES)
+    .filter((p) => p.maas)
+    .map((p) => ({ ...p, blended: blendedApiPrice(p) }))
     .sort((a, b) => a.blended - b.blended);

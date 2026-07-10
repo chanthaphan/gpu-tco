@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
   DEFAULTS, CONTROLS, computeModel, cumulativeCurve, sensitivityByUtilization,
-  tcoVsThroughput, sensitivityTornado, platformMatrix,
+  tcoVsThroughput, sensitivityTornado, platformMatrix, maasComparison,
 } from './model/tco.js';
 import { PLATFORMS, PLATFORM_ORDER } from './model/platforms.js';
 import { MODELS, MODEL_ORDER } from './model/models.js';
@@ -39,6 +39,7 @@ export default function App() {
   const sweep = useMemo(() => tcoVsThroughput(s), [s]);
   const tornado = useMemo(() => sensitivityTornado(s), [s]);
   const matrix = useMemo(() => platformMatrix(s), [s]);
+  const maas = useMemo(() => maasComparison(s), [s]);
 
   const tornadoData = tornado.rows.map((r) => ({
     label: L.controls[r.key] || r.label,
@@ -283,6 +284,34 @@ export default function App() {
               </ResponsiveContainer>
               <div style={{ fontSize: 11, color: grey, marginTop: 4 }}>
                 {L.sensNote}
+              </div>
+            </Card>
+
+            <Card title={L.chMaas}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1.5px solid #e0e3e7' }}>
+                      {[L.maasModel, L.maasBlended, L.maasCost, L.maasRatio, L.maasBe].map((h, i) => (
+                        <th key={h} style={{ fontSize: 9.5, color: grey, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, textAlign: i === 0 ? 'left' : 'right', padding: '4px 8px' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {maas.map((r) => (
+                      <tr key={r.id} style={{ borderBottom: '1px solid #eef0f2' }}>
+                        <td style={{ fontSize: 12, fontWeight: 600, color: navy, textAlign: 'left', padding: '5px 8px', whiteSpace: 'nowrap' }}>{r.label}</td>
+                        <td style={{ fontSize: 12, color: '#334', textAlign: 'right', padding: '5px 8px', fontVariantNumeric: 'tabular-nums' }}>{money.perTok(r.blended)}</td>
+                        <td style={{ fontSize: 12, color: red, fontWeight: 700, textAlign: 'right', padding: '5px 8px', fontVariantNumeric: 'tabular-nums' }}>{money.m(r.cost)}</td>
+                        <td style={{ fontSize: 12, color: '#334', textAlign: 'right', padding: '5px 8px', fontVariantNumeric: 'tabular-nums' }}>{r.ratio.toFixed(1)}×</td>
+                        <td style={{ fontSize: 12, color: teal, fontWeight: 700, textAlign: 'right', padding: '5px 8px', fontVariantNumeric: 'tabular-nums' }}>{r.beTpm ? L.maasBeVal(r.beTpm.toFixed(1)) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ fontSize: 10.5, color: grey, marginTop: 6, lineHeight: 1.5 }}>
+                {L.maasNote}
               </div>
             </Card>
 

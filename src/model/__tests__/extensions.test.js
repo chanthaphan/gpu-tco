@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeModel, effectiveTpm, llmSpeedFactor, resolveLlm, memoryFit,
-  tcoVsThroughput, sensitivityTornado, platformMatrix, DEFAULTS,
+  tcoVsThroughput, sensitivityTornado, platformMatrix, maasComparison, DEFAULTS, CONSTANTS,
 } from '../tco.js';
 import { PLATFORMS, PLATFORM_ORDER } from '../platforms.js';
 import { MODELS, SPEED_CLAMP } from '../models.js';
-import { API_PRICES, blendedApiPrice, apiBenchmarks, INPUT_SHARE } from '../apiPrices.js';
+import { API_PRICES, blendedApiPrice, apiBenchmarks, maasBenchmarks, INPUT_SHARE } from '../apiPrices.js';
 
 describe('LLM model selection', () => {
   it('default is GLM-5.2 (reference model A): factor 0.8, 17 H200 nodes', () => {
@@ -220,6 +220,34 @@ describe('platform matrix', () => {
       if (model.custom) continue;
       expect(model.contextK).toBeGreaterThan(0);
       expect(model.license).toBeTruthy();
+    }
+  });
+});
+
+describe('Azure MaaS comparison', () => {
+  const rows = maasComparison(DEFAULTS);
+
+  it('covers GPT-5.5 and Claude Sonnet 5 on Azure, cheapest first', () => {
+    expect(rows.map((r) => r.id)).toEqual(['sonnet5Azure', 'gpt55Azure']);
+    expect(maasBenchmarks().every((p) => p.maas && p.deployment)).toBe(true);
+  });
+
+  it('cost = 5-yr token volume × blended price', () => {
+    const tokensM = 10 * 60 * CONSTANTS.HOURS_PER_YEAR * CONSTANTS.HORIZON_YEARS;
+    for (const r of rows) {
+      expect(r.tokensM).toBeCloseTo(tokensM, 6);
+      expect(r.cost).toBeCloseTo(tokensM * r.blended, 3);
+    }
+  });
+
+  it('MaaS is an order of magnitude above on-prem at the 10M TPM baseline', () => {
+    for (const r of rows) expect(r.ratio).toBeGreaterThan(5);
+  });
+
+  it('MaaS only wins at very low volume (break-even under 1M TPM)', () => {
+    for (const r of rows) {
+      expect(r.beTpm).toBeGreaterThan(0);
+      expect(r.beTpm).toBeLessThan(1);
     }
   });
 });
